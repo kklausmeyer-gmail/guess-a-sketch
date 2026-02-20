@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draw & Guess!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Bubblegum+Sans&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Bubblegum Sans', cursive;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #a8edea 50%, #fed6e3 75%, #d299c2 100%);
+  background-size: 400% 400%;
+  animation: bgShift 12s ease infinite;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+@keyframes bgShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* TITLE SCREEN */
+#title-screen {
+  text-align: center;
+  animation: fadeIn 0.8s ease;
+}
+
+#title-screen h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 4rem;
+  color: #fff;
+  text-shadow: 4px 4px 0 #ff6b6b, 6px 6px 0 #4ecdc4;
+  animation: bounce 1.5s ease infinite;
+  margin-bottom: 10px;
+}
+
+#title-screen p {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.level-label {
+  font-size: 1.3rem !important;
+  margin-bottom: 10px !important;
+}
+
+.level-select {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.level-btn {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.5rem;
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  color: #555;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+  transition: all 0.15s;
+}
+
+.level-btn:hover { transform: translateY(-2px); background: #fff; }
+.level-btn.selected {
+  background: linear-gradient(135deg, #00b894, #00cec9);
+  color: #fff;
+  box-shadow: 0 4px 0 #019875;
+}
+
+#high-scores-display {
+  margin-top: 30px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 20px;
+  padding: 15px 25px;
+  display: none;
+}
+
+#high-scores-display h3 {
+  font-family: 'Fredoka One', cursive;
+  color: #6c5ce7;
+  margin-bottom: 10px;
+}
+
+#high-scores-display ol {
+  text-align: left;
+  padding-left: 25px;
+  color: #333;
+}
+
+#high-scores-display li {
+  margin: 5px 0;
+}
+
+#play-btn {
+  font-family: 'Fredoka One', cursive;
+  font-size: 2.5rem;
+  padding: 20px 60px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #ff6b6b, #feca57);
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  box-shadow: 0 8px 0 #e55a5a, 0 12px 20px rgba(0,0,0,0.2);
+  transition: all 0.1s;
+}
+
+#play-btn:hover { transform: translateY(-3px); box-shadow: 0 11px 0 #e55a5a, 0 15px 25px rgba(0,0,0,0.2); }
+#play-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #e55a5a, 0 6px 10px rgba(0,0,0,0.2); }
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* GAME SCREEN */
+#game-screen {
+  display: none;
+  text-align: center;
+  width: 95%;
+  max-width: 750px;
+  animation: fadeIn 0.5s ease;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stat-box {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.3rem;
+  color: #fff;
+  background: rgba(0,0,0,0.25);
+  padding: 8px 18px;
+  border-radius: 30px;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+
+canvas {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18), 0 0 0 6px #fff, 0 0 0 10px rgba(78,205,196,0.5);
+  display: block;
+  margin: 0 auto 12px;
+  max-width: 100%;
+}
+
+#hint-area {
+  margin-bottom: 12px;
+  min-height: 50px;
+}
+
+#next-btn {
+  font-family: 'Bubblegum Sans', cursive;
+  font-size: 1.4rem;
+  padding: 12px 40px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #00b894, #00cec9);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #019875, 0 6px 12px rgba(0,0,0,0.15);
+  transition: all 0.1s;
+  margin-right: 10px;
+}
+
+#next-btn:hover { transform: translateY(-2px); }
+#next-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #019875; }
+#next-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+#hint-btn {
+  font-family: 'Bubblegum Sans', cursive;
+  font-size: 1.2rem;
+  padding: 10px 30px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #5a4bd1, 0 6px 12px rgba(0,0,0,0.15);
+  transition: all 0.1s;
+}
+
+#hint-btn:hover { transform: translateY(-2px); }
+#hint-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #5a4bd1; }
+#hint-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+#hint-text {
+  font-size: 1.2rem;
+  color: #6c5ce7;
+  margin-top: 8px;
+  font-style: italic;
+  animation: fadeIn 0.4s ease;
+}
+
+.words-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.word-btn {
+  font-family: 'Bubblegum Sans', cursive;
+  font-size: 1.25rem;
+  padding: 14px 8px;
+  border: none;
+  border-radius: 16px;
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  box-shadow: 0 5px 0 rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.1);
+  transition: all 0.15s;
+  word-break: break-word;
+}
+
+.word-btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+.word-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+.word-btn:disabled { opacity: 0.45; cursor: default; transform: none; filter: none; }
+
+.word-btn.correct-pick {
+  animation: correctPop 0.5s ease;
+  background: #2ecc71 !important;
+  box-shadow: 0 0 20px #2ecc71;
+}
+
+.word-btn.wrong-pick {
+  animation: shake 0.45s ease;
+}
+
+@keyframes correctPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-10px); }
+  80% { transform: translateX(10px); }
+}
+
+/* button colors */
+.btn-c0 { background: #ff6b6b; } .btn-c1 { background: #feca57; color: #664d00; text-shadow: none; }
+.btn-c2 { background: #48dbfb; } .btn-c3 { background: #ff9ff3; }
+.btn-c4 { background: #54a0ff; } .btn-c5 { background: #5f27cd; }
+.btn-c6 { background: #01a3a4; } .btn-c7 { background: #f368e0; }
+.btn-c8 { background: #ff9f43; } .btn-c9 { background: #10ac84; }
+
+/* GAME OVER */
+#gameover-screen {
+  display: none;
+  text-align: center;
+  animation: fadeIn 0.6s ease;
+}
+
+#gameover-screen h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 3rem;
+  color: #fff;
+  text-shadow: 3px 3px 0 #e55a5a;
+  margin-bottom: 15px;
+}
+
+#gameover-screen p {
+  font-size: 1.4rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+#high-score-entry {
+  margin-bottom: 20px;
+}
+
+#high-score-entry p {
+  font-family: 'Fredoka One', cursive;
+  color: #feca57;
+  font-size: 1.6rem;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+}
+
+#player-name {
+  font-family: 'Bubblegum Sans', cursive;
+  font-size: 1.3rem;
+  padding: 12px 20px;
+  border: 3px solid #6c5ce7;
+  border-radius: 25px;
+  outline: none;
+  width: 180px;
+  text-align: center;
+}
+
+#player-name:focus {
+  border-color: #a29bfe;
+  box-shadow: 0 0 10px rgba(162,155,254,0.5);
+}
+
+#save-score-btn {
+  font-family: 'Bubblegum Sans', cursive;
+  font-size: 1.2rem;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #00b894, #00cec9);
+  color: #fff;
+  cursor: pointer;
+  margin-left: 10px;
+  box-shadow: 0 4px 0 #019875;
+  transition: all 0.1s;
+}
+
+#save-score-btn:hover { transform: translateY(-2px); }
+#save-score-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #019875; }
+
+#final-high-scores {
+  background: rgba(255,255,255,0.9);
+  border-radius: 20px;
+  padding: 15px 30px;
+  margin-bottom: 20px;
+  display: none;
+}
+
+#final-high-scores h3 {
+  font-family: 'Fredoka One', cursive;
+  color: #6c5ce7;
+  margin-bottom: 10px;
+}
+
+#final-high-scores ol {
+  text-align: left;
+  padding-left: 25px;
+  color: #333;
+  margin: 0;
+}
+
+#final-high-scores li {
+  margin: 5px 0;
+}
+
+#final-high-scores li.current-score {
+  color: #00b894;
+  font-weight: bold;
+}
+
+/* CELEBRATION */
+#celebration {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  animation: confettiFall 1.2s ease forwards;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* LEVEL-UP BANNER */
+#level-banner {
+  display: none;
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Fredoka One', cursive;
+  font-size: 3rem;
+  color: #fff;
+  text-shadow: 3px 3px 0 #e55a5a;
+  background: rgba(0,0,0,0.5);
+  padding: 30px 60px;
+  border-radius: 30px;
+  z-index: 1000;
+  animation: popIn 0.5s ease;
+}
+
+@keyframes popIn {
+  0% { transform: translate(-50%, -50%) scale(0); }
+  70% { transform: translate(-50%, -50%) scale(1.15); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* SCORE POPUP */
+.score-popup {
+  position: absolute;
+  font-family: 'Fredoka One', cursive;
+  font-size: 2rem;
+  color: #2ecc71;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  animation: floatUp 1s ease forwards;
+  pointer-events: none;
+  z-index: 500;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
+}
+
+@media (max-width: 600px) {
+  #title-screen h1 { font-size: 2.5rem; }
+  .words-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .word-btn { font-size: 0.95rem; padding: 10px 4px; }
+  .stat-box { font-size: 1rem; padding: 6px 12px; }
+  canvas { width: 100%; height: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div id="title-screen">
+  <h1>Draw & Guess!</h1>
+  <p>Can you guess what I'm drawing?</p>
+  <p class="level-label">How many levels?</p>
+  <div class="level-select">
+    <button class="level-btn" onclick="selectMaxLevel(5)">5</button>
+    <button class="level-btn selected" onclick="selectMaxLevel(10)">10</button>
+    <button class="level-btn" onclick="selectMaxLevel(20)">20</button>
+  </div>
+  <button id="play-btn" onclick="startGame()">Play!</button>
+  <div id="high-scores-display"></div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <div class="top-bar">
+    <div class="stat-box" id="score-display">Score: 100</div>
+    <div class="stat-box" id="hints-display">Hints: 3</div>
+    <div class="stat-box" id="level-display">Level 1 / 10</div>
+  </div>
+  <canvas id="draw-canvas" width="500" height="380"></canvas>
+  <div id="hint-area">
+    <button id="next-btn" onclick="showNextPath()">Next Line</button>
+    <button id="hint-btn" onclick="showHint()">Hint</button>
+    <div id="hint-text"></div>
+  </div>
+  <div class="words-grid" id="words-grid"></div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="gameover-screen">
+  <h1 id="gameover-title">Game Over!</h1>
+  <p id="final-score-text"></p>
+  <p id="final-level-text"></p>
+  <div id="high-score-entry" style="display:none;">
+    <p>You got a high score!</p>
+    <input type="text" id="player-name" placeholder="Your name" maxlength="12">
+    <button id="save-score-btn" onclick="saveHighScore()">Save</button>
+  </div>
+  <div id="final-high-scores"></div>
+  <button id="play-btn" onclick="startGame()">Play Again!</button>
+</div>
+
+<!-- CELEBRATION OVERLAY -->
+<div id="celebration"></div>
+<div id="level-banner"></div>
+
+<script>
+// ============ DRAWING LIBRARY ============
+const DRAWINGS = {
+  // --- EASY (Levels 1-3) ---
+  sun: {
+    hint: "It shines bright in the sky during the day!",
+    paths: [
+      {t:'circle', cx:250, cy:190, r:60, color:'#feca57', fill:'#feca57', w:3},
+      {t:'line', x1:250, y1:110, x2:250, y2:60, color:'#feca57', w:5},
+      {t:'line', x1:250, y1:270, x2:250, y2:320, color:'#feca57', w:5},
+      {t:'line', x1:170, y1:190, x2:120, y2:190, color:'#feca57', w:5},
+      {t:'line', x1:330, y1:190, x2:380, y2:190, color:'#feca57', w:5},
+      {t:'line', x1:192, y1:132, x2:155, y2:95, color:'#feca57', w:5},
+      {t:'line', x1:308, y1:132, x2:345, y2:95, color:'#feca57', w:5},
+      {t:'line', x1:192, y1:248, x2:155, y2:285, color:'#feca57', w:5},
+      {t:'line', x1:308, y1:248, x2:345, y2:285, color:'#feca57', w:5},
+      {t:'circle', cx:230, cy:178, r:8, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:270, cy:178, r:8, color:'#333', fill:'#333', w:2},
+      {t:'arc', cx:250, cy:198, r:22, sa:0.1, ea:Math.PI-0.1, color:'#333', w:3},
+    ]
+  },
+  heart: {
+    hint: "You see this shape on Valentine's Day cards!",
+    paths: [
+      {t:'arc', cx:210, cy:170, r:50, sa:Math.PI, ea:0, color:'#ff6b6b', w:5},
+      {t:'arc', cx:290, cy:170, r:50, sa:Math.PI, ea:0, color:'#ff6b6b', w:5},
+      {t:'line', x1:160, y1:170, x2:250, y2:300, color:'#ff6b6b', w:5},
+      {t:'line', x1:340, y1:170, x2:250, y2:300, color:'#ff6b6b', w:5},
+    ]
+  },
+  star: {
+    hint: "You can see these twinkling in the night sky!",
+    paths: [
+      {t:'line', x1:250, y1:80, x2:270, y2:160, color:'#feca57', w:5},
+      {t:'line', x1:270, y1:160, x2:350, y2:170, color:'#feca57', w:5},
+      {t:'line', x1:350, y1:170, x2:290, y2:220, color:'#feca57', w:5},
+      {t:'line', x1:290, y1:220, x2:310, y2:300, color:'#feca57', w:5},
+      {t:'line', x1:310, y1:300, x2:250, y2:255, color:'#feca57', w:5},
+      {t:'line', x1:250, y1:255, x2:190, y2:300, color:'#feca57', w:5},
+      {t:'line', x1:190, y1:300, x2:210, y2:220, color:'#feca57', w:5},
+      {t:'line', x1:210, y1:220, x2:150, y2:170, color:'#feca57', w:5},
+      {t:'line', x1:150, y1:170, x2:230, y2:160, color:'#feca57', w:5},
+      {t:'line', x1:230, y1:160, x2:250, y2:80, color:'#feca57', w:5},
+    ]
+  },
+  house: {
+    hint: "People live inside this building!",
+    paths: [
+      {t:'line', x1:150, y1:220, x2:350, y2:220, color:'#e17055', w:4},
+      {t:'line', x1:350, y1:220, x2:350, y2:330, color:'#e17055', w:4},
+      {t:'line', x1:350, y1:330, x2:150, y2:330, color:'#e17055', w:4},
+      {t:'line', x1:150, y1:330, x2:150, y2:220, color:'#e17055', w:4},
+      {t:'line', x1:130, y1:220, x2:250, y2:120, color:'#d63031', w:5},
+      {t:'line', x1:250, y1:120, x2:370, y2:220, color:'#d63031', w:5},
+      {t:'line', x1:220, y1:330, x2:220, y2:270, color:'#6c5ce7', w:4},
+      {t:'line', x1:220, y1:270, x2:280, y2:270, color:'#6c5ce7', w:4},
+      {t:'line', x1:280, y1:270, x2:280, y2:330, color:'#6c5ce7', w:4},
+      {t:'rect', x:190, y:235, rw:40, rh:30, color:'#74b9ff', w:3},
+      {t:'rect', x:270, y:235, rw:40, rh:30, color:'#74b9ff', w:3},
+    ]
+  },
+  tree: {
+    hint: "Birds like to sit in this. It has leaves and a trunk!",
+    paths: [
+      {t:'rect', x:230, y:250, rw:40, rh:100, color:'#b5651d', fill:'#b5651d', w:3},
+      {t:'circle', cx:250, cy:180, r:70, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:200, cy:210, r:45, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:300, cy:210, r:45, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:250, cy:140, r:40, color:'#00cec9', fill:'#00cec9', w:3},
+    ]
+  },
+  flower: {
+    hint: "Bees visit these colorful plants in a garden!",
+    paths: [
+      {t:'line', x1:250, y1:220, x2:250, y2:340, color:'#00b894', w:5},
+      {t:'line', x1:250, y1:280, x2:210, y2:300, color:'#00b894', w:4},
+      {t:'line', x1:250, y1:290, x2:290, y2:310, color:'#00b894', w:4},
+      {t:'circle', cx:250, cy:170, r:30, color:'#fd79a8', fill:'#fd79a8', w:3},
+      {t:'circle', cx:215, cy:195, r:30, color:'#e84393', fill:'#e84393', w:3},
+      {t:'circle', cx:285, cy:195, r:30, color:'#e84393', fill:'#e84393', w:3},
+      {t:'circle', cx:225, cy:150, r:30, color:'#fd79a8', fill:'#fd79a8', w:3},
+      {t:'circle', cx:275, cy:150, r:30, color:'#fd79a8', fill:'#fd79a8', w:3},
+      {t:'circle', cx:250, cy:175, r:18, color:'#feca57', fill:'#feca57', w:3},
+    ]
+  },
+  fish: {
+    hint: "This animal swims in water and has fins!",
+    paths: [
+      {t:'ellipse', cx:250, cy:200, rx:90, ry:50, color:'#ff9f43', fill:'#ff9f43', w:3},
+      {t:'line', x1:340, y1:200, x2:400, y2:150, color:'#ff9f43', w:5},
+      {t:'line', x1:400, y1:150, x2:400, y2:250, color:'#ff9f43', w:5},
+      {t:'line', x1:400, y1:250, x2:340, y2:200, color:'#ff9f43', w:5},
+      {t:'circle', cx:200, cy:188, r:8, color:'#333', fill:'#333', w:2},
+      {t:'arc', cx:215, cy:210, r:12, sa:0.1, ea:Math.PI-0.1, color:'#333', w:3},
+    ]
+  },
+  moon: {
+    hint: "You can see this glowing in the night sky!",
+    paths: [
+      {t:'circle', cx:250, cy:190, r:80, color:'#feca57', fill:'#feca57', w:3},
+      {t:'circle', cx:285, cy:170, r:65, color:'#a8edea', fill:'#a8edea', w:3},
+    ]
+  },
+  apple: {
+    hint: "A yummy red fruit! Teachers love getting these!",
+    paths: [
+      {t:'circle', cx:250, cy:220, r:70, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'line', x1:250, y1:150, x2:260, y2:115, color:'#b5651d', w:5},
+      {t:'ellipse', cx:275, cy:130, rx:20, ry:10, color:'#00b894', fill:'#00b894', w:2},
+    ]
+  },
+  ball: {
+    hint: "Kids love to throw and catch this round toy!",
+    paths: [
+      {t:'circle', cx:250, cy:200, r:80, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'arc', cx:250, cy:200, r:80, sa:0.3, ea:1.2, color:'#fff', w:4},
+      {t:'arc', cx:250, cy:200, r:80, sa:2.0, ea:2.9, color:'#feca57', w:4},
+      {t:'arc', cx:250, cy:200, r:80, sa:3.8, ea:4.7, color:'#54a0ff', w:4},
+    ]
+  },
+  rainbow: {
+    hint: "This colorful arch appears in the sky after rain!",
+    paths: [
+      {t:'arc', cx:250, cy:280, r:150, sa:Math.PI, ea:0, color:'#ff6b6b', w:12},
+      {t:'arc', cx:250, cy:280, r:130, sa:Math.PI, ea:0, color:'#ff9f43', w:12},
+      {t:'arc', cx:250, cy:280, r:110, sa:Math.PI, ea:0, color:'#feca57', w:12},
+      {t:'arc', cx:250, cy:280, r:90, sa:Math.PI, ea:0, color:'#00b894', w:12},
+      {t:'arc', cx:250, cy:280, r:70, sa:Math.PI, ea:0, color:'#54a0ff', w:12},
+      {t:'arc', cx:250, cy:280, r:50, sa:Math.PI, ea:0, color:'#a29bfe', w:12},
+    ]
+  },
+  cat: {
+    hint: "This pet says meow and loves to nap!",
+    paths: [
+      {t:'circle', cx:250, cy:220, r:65, color:'#ffa502', fill:'#ffa502', w:3},
+      {t:'line', x1:195, y1:170, x2:210, y2:120, color:'#ffa502', w:6},
+      {t:'line', x1:210, y1:120, x2:230, y2:165, color:'#ffa502', w:6},
+      {t:'line', x1:305, y1:170, x2:290, y2:120, color:'#ffa502', w:6},
+      {t:'line', x1:290, y1:120, x2:270, y2:165, color:'#ffa502', w:6},
+      {t:'circle', cx:228, cy:208, r:10, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:272, cy:208, r:10, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:250, cy:228, r:6, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'line', x1:250, y1:234, x2:250, y2:245, color:'#333', w:2},
+      {t:'line', x1:200, y1:225, x2:155, y2:218, color:'#333', w:2},
+      {t:'line', x1:200, y1:235, x2:155, y2:238, color:'#333', w:2},
+      {t:'line', x1:300, y1:225, x2:345, y2:218, color:'#333', w:2},
+      {t:'line', x1:300, y1:235, x2:345, y2:238, color:'#333', w:2},
+    ]
+  },
+
+  // --- MEDIUM (Levels 4-6) ---
+  dog: {
+    hint: "This pet barks and wags its tail! Man's best friend!",
+    paths: [
+      {t:'circle', cx:250, cy:210, r:65, color:'#b5651d', fill:'#b5651d', w:3},
+      {t:'ellipse', cx:195, cy:170, rx:30, ry:45, color:'#8B4513', fill:'#8B4513', w:3},
+      {t:'ellipse', cx:305, cy:170, rx:30, ry:45, color:'#8B4513', fill:'#8B4513', w:3},
+      {t:'circle', cx:230, cy:200, r:10, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:270, cy:200, r:10, color:'#333', fill:'#333', w:2},
+      {t:'ellipse', cx:250, cy:232, rx:18, ry:12, color:'#333', fill:'#333', w:2},
+      {t:'arc', cx:240, cy:248, r:12, sa:0, ea:Math.PI, color:'#333', w:2},
+      {t:'arc', cx:260, cy:248, r:12, sa:0, ea:Math.PI, color:'#333', w:2},
+    ]
+  },
+  bird: {
+    hint: "This animal has feathers and can fly in the sky!",
+    paths: [
+      {t:'ellipse', cx:250, cy:210, rx:60, ry:40, color:'#54a0ff', fill:'#54a0ff', w:3},
+      {t:'circle', cx:300, cy:190, r:28, color:'#54a0ff', fill:'#54a0ff', w:3},
+      {t:'circle', cx:310, cy:185, r:6, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:328, y1:190, x2:360, y2:185, color:'#feca57', w:4},
+      {t:'line', x1:360, y1:185, x2:328, y2:195, color:'#feca57', w:4},
+      {t:'line', x1:230, y1:180, x2:190, y2:140, color:'#3867d6', w:5},
+      {t:'line', x1:190, y1:140, x2:260, y2:175, color:'#3867d6', w:5},
+      {t:'line', x1:220, y1:250, x2:220, y2:290, color:'#feca57', w:3},
+      {t:'line', x1:260, y1:250, x2:260, y2:290, color:'#feca57', w:3},
+    ]
+  },
+  car: {
+    hint: "People drive this on the road. It has four wheels!",
+    paths: [
+      {t:'rect', x:130, y:190, rw:240, rh:80, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'line', x1:180, y1:190, x2:210, y2:130, color:'#ff6b6b', w:5},
+      {t:'line', x1:210, y1:130, x2:310, y2:130, color:'#ff6b6b', w:5},
+      {t:'line', x1:310, y1:130, x2:340, y2:190, color:'#ff6b6b', w:5},
+      {t:'rect', x:220, y:140, rw:80, rh:45, color:'#74b9ff', fill:'#74b9ff', w:2},
+      {t:'circle', cx:200, cy:275, r:25, color:'#333', fill:'#555', w:4},
+      {t:'circle', cx:310, cy:275, r:25, color:'#333', fill:'#555', w:4},
+      {t:'circle', cx:200, cy:275, r:10, color:'#888', fill:'#888', w:2},
+      {t:'circle', cx:310, cy:275, r:10, color:'#888', fill:'#888', w:2},
+    ]
+  },
+  boat: {
+    hint: "This floats on water and has a sail!",
+    paths: [
+      {t:'line', x1:130, y1:250, x2:370, y2:250, color:'#e17055', w:5},
+      {t:'line', x1:150, y1:250, x2:180, y2:310, color:'#e17055', w:5},
+      {t:'line', x1:180, y1:310, x2:320, y2:310, color:'#e17055', w:5},
+      {t:'line', x1:320, y1:310, x2:350, y2:250, color:'#e17055', w:5},
+      {t:'line', x1:250, y1:250, x2:250, y2:100, color:'#b5651d', w:4},
+      {t:'line', x1:250, y1:100, x2:250, y2:170, color:'#fff', w:1},
+      {t:'line', x1:250, y1:110, x2:340, y2:180, color:'#fff', w:3},
+      {t:'line', x1:340, y1:180, x2:250, y2:245, color:'#fff', w:3},
+      {t:'line', x1:250, y1:245, x2:250, y2:110, color:'#fff', w:3},
+    ]
+  },
+  butterfly: {
+    hint: "This colorful insect has big wings and was once a caterpillar!",
+    paths: [
+      {t:'line', x1:250, y1:130, x2:250, y2:290, color:'#333', w:4},
+      {t:'ellipse', cx:200, cy:180, rx:55, ry:45, color:'#e84393', fill:'#e84393', w:3},
+      {t:'ellipse', cx:300, cy:180, rx:55, ry:45, color:'#e84393', fill:'#e84393', w:3},
+      {t:'ellipse', cx:205, cy:240, rx:40, ry:35, color:'#fd79a8', fill:'#fd79a8', w:3},
+      {t:'ellipse', cx:295, cy:240, rx:40, ry:35, color:'#fd79a8', fill:'#fd79a8', w:3},
+      {t:'circle', cx:200, cy:175, r:12, color:'#feca57', fill:'#feca57', w:2},
+      {t:'circle', cx:300, cy:175, r:12, color:'#feca57', fill:'#feca57', w:2},
+      {t:'line', x1:250, y1:130, x2:230, y2:100, color:'#333', w:3},
+      {t:'line', x1:250, y1:130, x2:270, y2:100, color:'#333', w:3},
+      {t:'circle', cx:230, cy:96, r:5, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:270, cy:96, r:5, color:'#333', fill:'#333', w:2},
+    ]
+  },
+  icecream: {
+    hint: "A cold, sweet treat on a cone! Yummy on hot days!",
+    paths: [
+      {t:'line', x1:215, y1:210, x2:250, y2:340, color:'#deb887', w:5},
+      {t:'line', x1:285, y1:210, x2:250, y2:340, color:'#deb887', w:5},
+      {t:'line', x1:215, y1:210, x2:285, y2:210, color:'#deb887', w:3},
+      {t:'circle', cx:250, cy:175, r:45, color:'#ff9ff3', fill:'#ff9ff3', w:3},
+      {t:'circle', cx:215, cy:185, r:35, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'circle', cx:285, cy:185, r:35, color:'#feca57', fill:'#feca57', w:3},
+      {t:'circle', cx:250, cy:140, r:30, color:'#a29bfe', fill:'#a29bfe', w:3},
+    ]
+  },
+  pizza: {
+    hint: "A delicious triangle-shaped food with cheese and pepperoni!",
+    paths: [
+      {t:'line', x1:250, y1:100, x2:130, y2:310, color:'#feca57', w:5},
+      {t:'line', x1:130, y1:310, x2:370, y2:310, color:'#feca57', w:5},
+      {t:'line', x1:370, y1:310, x2:250, y2:100, color:'#feca57', w:5},
+      {t:'arc', cx:250, cy:310, r:120, sa:Math.PI, ea:0, color:'#e17055', w:6},
+      {t:'circle', cx:220, cy:230, r:15, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'circle', cx:280, cy:250, r:15, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'circle', cx:250, cy:280, r:15, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'circle', cx:200, cy:275, r:12, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'circle', cx:310, cy:280, r:12, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+    ]
+  },
+  umbrella: {
+    hint: "You hold this over your head when it rains!",
+    paths: [
+      {t:'arc', cx:250, cy:180, r:110, sa:Math.PI, ea:0, color:'#ff6b6b', w:5},
+      {t:'line', x1:140, y1:180, x2:360, y2:180, color:'#ff6b6b', w:4},
+      {t:'line', x1:250, y1:100, x2:250, y2:320, color:'#b5651d', w:5},
+      {t:'arc', cx:270, cy:320, r:20, sa:0, ea:Math.PI, color:'#b5651d', w:4},
+      {t:'arc', cx:195, cy:180, r:55, sa:Math.PI, ea:0, color:'#e84393', w:3},
+      {t:'arc', cx:305, cy:180, r:55, sa:Math.PI, ea:0, color:'#e84393', w:3},
+    ]
+  },
+  rocket: {
+    hint: "Astronauts fly to space in this! 3... 2... 1... Blast off!",
+    paths: [
+      {t:'rect', x:220, y:150, rw:60, rh:150, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'arc', cx:250, cy:150, r:30, sa:Math.PI, ea:0, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'line', x1:220, y1:260, x2:190, y2:310, color:'#54a0ff', w:5},
+      {t:'line', x1:190, y1:310, x2:220, y2:300, color:'#54a0ff', w:5},
+      {t:'line', x1:280, y1:260, x2:310, y2:310, color:'#54a0ff', w:5},
+      {t:'line', x1:310, y1:310, x2:280, y2:300, color:'#54a0ff', w:5},
+      {t:'circle', cx:250, cy:220, r:15, color:'#74b9ff', fill:'#74b9ff', w:2},
+      {t:'line', x1:235, y1:310, x2:230, y2:350, color:'#ff9f43', w:6},
+      {t:'line', x1:250, y1:310, x2:250, y2:360, color:'#feca57', w:6},
+      {t:'line', x1:265, y1:310, x2:270, y2:350, color:'#ff9f43', w:6},
+    ]
+  },
+  snowman: {
+    hint: "You build this outside when it snows! It has a carrot nose!",
+    paths: [
+      {t:'circle', cx:250, cy:290, r:60, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:250, cy:195, r:45, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:250, cy:120, r:32, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:238, cy:112, r:5, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:262, cy:112, r:5, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:250, y1:122, x2:270, y2:118, color:'#ff9f43', w:4},
+      {t:'circle', cx:250, cy:185, r:5, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:250, cy:205, r:5, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:205, y1:195, x2:160, y2:170, color:'#b5651d', w:4},
+      {t:'line', x1:295, y1:195, x2:340, y2:170, color:'#b5651d', w:4},
+      {t:'rect', x:225, y:80, rw:50, rh:20, color:'#333', fill:'#333', w:2},
+      {t:'rect', x:235, y:55, rw:30, rh:30, color:'#333', fill:'#333', w:2},
+    ]
+  },
+
+  // --- HARD (Levels 7+) ---
+  dinosaur: {
+    hint: "A huge reptile that lived millions of years ago! ROAR!",
+    paths: [
+      {t:'ellipse', cx:240, cy:230, rx:90, ry:55, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:340, cy:170, r:40, color:'#00b894', fill:'#00b894', w:3},
+      {t:'line', x1:295, y1:200, x2:310, y2:185, color:'#00b894', w:15},
+      {t:'circle', cx:355, cy:160, r:7, color:'#333', fill:'#333', w:2},
+      {t:'arc', cx:350, cy:178, r:15, sa:0, ea:Math.PI, color:'#333', w:3},
+      {t:'line', x1:200, y1:280, x2:200, y2:340, color:'#00b894', w:8},
+      {t:'line', x1:270, y1:280, x2:270, y2:340, color:'#00b894', w:8},
+      {t:'line', x1:150, y1:240, x2:100, y2:260, color:'#00b894', w:8},
+      {t:'line', x1:230, y1:195, x2:230, y2:178, color:'#00b894', w:5},
+      {t:'line', x1:250, y1:192, x2:250, y2:175, color:'#00b894', w:5},
+      {t:'line', x1:270, y1:195, x2:270, y2:178, color:'#00b894', w:5},
+    ]
+  },
+  elephant: {
+    hint: "The biggest land animal! It has a very long nose called a trunk!",
+    paths: [
+      {t:'ellipse', cx:250, cy:220, rx:100, ry:70, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'circle', cx:330, cy:170, r:50, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'circle', cx:345, cy:160, r:8, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:350, y1:210, x2:360, y2:260, color:'#a5b1c2', w:10},
+      {t:'line', x1:360, y1:260, x2:350, y2:300, color:'#a5b1c2', w:10},
+      {t:'line', x1:350, y1:300, x2:370, y2:310, color:'#a5b1c2', w:8},
+      {t:'ellipse', cx:300, cy:140, rx:50, ry:35, color:'#d1d8e0', fill:'#d1d8e0', w:3},
+      {t:'line', x1:190, y1:285, x2:190, y2:340, color:'#a5b1c2', w:10},
+      {t:'line', x1:240, y1:285, x2:240, y2:340, color:'#a5b1c2', w:10},
+      {t:'line', x1:280, y1:285, x2:280, y2:340, color:'#a5b1c2', w:10},
+      {t:'line', x1:310, y1:280, x2:310, y2:340, color:'#a5b1c2', w:10},
+      {t:'line', x1:155, y1:230, x2:120, y2:250, color:'#a5b1c2', w:6},
+    ]
+  },
+  guitar: {
+    hint: "A musical instrument with strings! Rock stars play this!",
+    paths: [
+      {t:'ellipse', cx:250, cy:270, rx:65, ry:55, color:'#b5651d', fill:'#b5651d', w:3},
+      {t:'ellipse', cx:250, cy:190, rx:45, ry:38, color:'#deb887', fill:'#deb887', w:3},
+      {t:'rect', x:240, y:80, rw:20, rh:120, color:'#b5651d', fill:'#b5651d', w:3},
+      {t:'rect', x:230, y:60, rw:40, rh:25, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:237, y1:63, x2:237, y2:85, color:'#dfe6e9', w:2},
+      {t:'line', x1:250, y1:63, x2:250, y2:85, color:'#dfe6e9', w:2},
+      {t:'line', x1:263, y1:63, x2:263, y2:85, color:'#dfe6e9', w:2},
+      {t:'circle', cx:250, cy:270, r:18, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:244, y1:155, x2:244, y2:310, color:'#dfe6e9', w:1},
+      {t:'line', x1:250, y1:155, x2:250, y2:310, color:'#dfe6e9', w:1},
+      {t:'line', x1:256, y1:155, x2:256, y2:310, color:'#dfe6e9', w:1},
+    ]
+  },
+  castle: {
+    hint: "Kings and queens live in this big stone building!",
+    paths: [
+      {t:'rect', x:170, y:180, rw:160, rh:160, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:145, y:150, rw:30, rh:190, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:325, y:150, rw:30, rh:190, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:140, y:130, rw:12, rh:25, color:'#a5b1c2', fill:'#a5b1c2', w:2},
+      {t:'rect', x:160, y:130, rw:12, rh:25, color:'#a5b1c2', fill:'#a5b1c2', w:2},
+      {t:'rect', x:328, y:130, rw:12, rh:25, color:'#a5b1c2', fill:'#a5b1c2', w:2},
+      {t:'rect', x:348, y:130, rw:12, rh:25, color:'#a5b1c2', fill:'#a5b1c2', w:2},
+      {t:'rect', x:225, y:260, rw:50, rh:80, color:'#6c5ce7', fill:'#6c5ce7', w:3},
+      {t:'arc', cx:250, cy:260, r:25, sa:Math.PI, ea:0, color:'#6c5ce7', fill:'#6c5ce7', w:3},
+      {t:'rect', x:185, y:210, rw:30, rh:30, color:'#74b9ff', fill:'#74b9ff', w:2},
+      {t:'rect', x:285, y:210, rw:30, rh:30, color:'#74b9ff', fill:'#74b9ff', w:2},
+      {t:'line', x1:230, y1:160, x2:250, y2:120, color:'#a5b1c2', w:5},
+      {t:'line', x1:250, y1:120, x2:270, y2:160, color:'#a5b1c2', w:5},
+      {t:'rect', x:245, y:100, rw:10, rh:25, color:'#feca57', fill:'#feca57', w:2},
+    ]
+  },
+  airplane: {
+    hint: "This flies high in the sky and takes people on vacation!",
+    paths: [
+      {t:'ellipse', cx:250, cy:200, rx:130, ry:25, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'arc', cx:370, cy:200, r:15, sa:-Math.PI/2, ea:Math.PI/2, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'line', x1:220, y1:175, x2:180, y2:120, color:'#a5b1c2', w:5},
+      {t:'line', x1:180, y1:120, x2:280, y2:175, color:'#a5b1c2', w:5},
+      {t:'line', x1:220, y1:225, x2:180, y2:280, color:'#a5b1c2', w:5},
+      {t:'line', x1:180, y1:280, x2:280, y2:225, color:'#a5b1c2', w:5},
+      {t:'line', x1:350, y1:185, x2:370, y2:155, color:'#a5b1c2', w:4},
+      {t:'line', x1:370, y1:155, x2:380, y2:185, color:'#a5b1c2', w:4},
+      {t:'line', x1:350, y1:215, x2:370, y2:245, color:'#a5b1c2', w:4},
+      {t:'line', x1:370, y1:245, x2:380, y2:215, color:'#a5b1c2', w:4},
+      {t:'circle', cx:160, cy:195, r:8, color:'#74b9ff', fill:'#74b9ff', w:2},
+      {t:'circle', cx:190, cy:195, r:8, color:'#74b9ff', fill:'#74b9ff', w:2},
+      {t:'circle', cx:220, cy:195, r:8, color:'#74b9ff', fill:'#74b9ff', w:2},
+    ]
+  },
+  octopus: {
+    hint: "A sea creature with eight long arms!",
+    paths: [
+      {t:'ellipse', cx:250, cy:160, rx:65, ry:55, color:'#a29bfe', fill:'#a29bfe', w:3},
+      {t:'circle', cx:230, cy:150, r:10, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:270, cy:150, r:10, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:232, cy:152, r:5, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:272, cy:152, r:5, color:'#333', fill:'#333', w:2},
+      {t:'arc', cx:250, cy:172, r:12, sa:0, ea:Math.PI, color:'#e84393', w:3},
+      {t:'bezier', x1:195, y1:200, cp1x:170, cp1y:260, cp2x:140, cp2y:300, x2:130, y2:320, color:'#a29bfe', w:6},
+      {t:'bezier', x1:210, y1:210, cp1x:190, cp1y:270, cp2x:170, cp2y:310, x2:175, y2:330, color:'#a29bfe', w:6},
+      {t:'bezier', x1:230, y1:215, cp1x:220, cp1y:270, cp2x:210, cp2y:310, x2:220, y2:340, color:'#a29bfe', w:6},
+      {t:'bezier', x1:250, y1:215, cp1x:250, cp1y:280, cp2x:250, cp2y:310, x2:250, y2:340, color:'#a29bfe', w:6},
+      {t:'bezier', x1:270, y1:215, cp1x:280, cp1y:270, cp2x:290, cp2y:310, x2:280, y2:340, color:'#a29bfe', w:6},
+      {t:'bezier', x1:290, y1:210, cp1x:310, cp1y:270, cp2x:330, cp2y:310, x2:325, y2:330, color:'#a29bfe', w:6},
+      {t:'bezier', x1:305, y1:200, cp1x:330, cp1y:260, cp2x:360, cp2y:300, x2:370, y2:320, color:'#a29bfe', w:6},
+    ]
+  },
+  robot: {
+    hint: "A machine that can walk and talk! Beep boop!",
+    paths: [
+      {t:'rect', x:200, y:160, rw:100, rh:90, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:215, y:100, rw:70, rh:65, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:225, y:115, rw:20, rh:20, color:'#54a0ff', fill:'#54a0ff', w:2},
+      {t:'rect', x:255, y:115, rw:20, rh:20, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'rect', x:235, y:145, rw:30, rh:8, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:250, y1:100, x2:250, y2:80, color:'#a5b1c2', w:4},
+      {t:'circle', cx:250, cy:75, r:8, color:'#feca57', fill:'#feca57', w:2},
+      {t:'rect', x:160, y:175, rw:40, rh:20, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:300, y:175, rw:40, rh:20, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:210, y:255, rw:25, rh:50, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'rect', x:265, y:255, rw:25, rh:50, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'circle', cx:230, cy:200, r:8, color:'#feca57', fill:'#feca57', w:2},
+      {t:'circle', cx:250, cy:220, r:8, color:'#feca57', fill:'#feca57', w:2},
+      {t:'circle', cx:270, cy:200, r:8, color:'#feca57', fill:'#feca57', w:2},
+    ]
+  },
+  dragon: {
+    hint: "A big flying lizard that breathes fire! From fairy tales!",
+    paths: [
+      {t:'ellipse', cx:230, cy:230, rx:80, ry:55, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:330, cy:170, r:40, color:'#00b894', fill:'#00b894', w:3},
+      {t:'line', x1:280, y1:210, x2:310, y2:185, color:'#00b894', w:12},
+      {t:'circle', cx:345, cy:160, r:7, color:'#feca57', fill:'#feca57', w:2},
+      {t:'line', x1:360, y1:180, x2:400, y2:170, color:'#ff6b6b', w:5},
+      {t:'line', x1:400, y1:170, x2:420, y2:155, color:'#ff9f43', w:4},
+      {t:'line', x1:400, y1:170, x2:420, y2:175, color:'#ff9f43', w:4},
+      {t:'line', x1:400, y1:170, x2:415, y2:190, color:'#feca57', w:3},
+      {t:'line', x1:310, y1:140, x2:300, y2:110, color:'#00b894', w:4},
+      {t:'line', x1:340, y1:135, x2:335, y2:105, color:'#00b894', w:4},
+      {t:'line', x1:200, y1:190, x2:160, y2:140, color:'#00b894', w:5},
+      {t:'line', x1:160, y1:140, x2:230, y2:175, color:'#00b894', w:5},
+      {t:'line', x1:240, y1:190, x2:290, y2:130, color:'#00b894', w:5},
+      {t:'line', x1:290, y1:130, x2:275, y2:195, color:'#00b894', w:5},
+      {t:'line', x1:155, y1:240, x2:110, y2:270, color:'#00b894', w:7},
+      {t:'line', x1:200, y1:280, x2:200, y2:340, color:'#00b894', w:7},
+      {t:'line', x1:260, y1:280, x2:260, y2:340, color:'#00b894', w:7},
+    ]
+  },
+  unicorn: {
+    hint: "A magical horse with a horn on its head!",
+    paths: [
+      {t:'ellipse', cx:240, cy:230, rx:80, ry:50, color:'#fff', fill:'#fff', w:3},
+      {t:'circle', cx:330, cy:180, r:38, color:'#fff', fill:'#fff', w:3},
+      {t:'line', x1:290, y1:210, x2:305, y2:190, color:'#fff', w:12},
+      {t:'circle', cx:345, cy:172, r:6, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:330, y1:145, x2:345, y2:90, color:'#feca57', w:6},
+      {t:'line', x1:310, y1:160, x2:290, y2:145, color:'#ff9ff3', w:6},
+      {t:'line', x1:290, y1:145, x2:300, y2:165, color:'#ff9ff3', w:4},
+      {t:'line', x1:350, y1:160, x2:370, y2:145, color:'#ff9ff3', w:6},
+      {t:'line', x1:370, y1:145, x2:360, y2:165, color:'#ff9ff3', w:4},
+      {t:'line', x1:190, y1:275, x2:190, y2:340, color:'#dfe6e9', w:7},
+      {t:'line', x1:230, y1:278, x2:230, y2:340, color:'#dfe6e9', w:7},
+      {t:'line', x1:260, y1:275, x2:260, y2:340, color:'#dfe6e9', w:7},
+      {t:'line', x1:290, y1:270, x2:290, y2:340, color:'#dfe6e9', w:7},
+      {t:'bezier', x1:160, y1:240, cp1x:120, cp1y:250, cp2x:100, cp2y:280, x2:90, y2:260, color:'#ff9ff3', w:5},
+      {t:'bezier', x1:160, y1:240, cp1x:120, cp1y:260, cp2x:100, cp2y:290, x2:95, y2:280, color:'#a29bfe', w:5},
+      {t:'bezier', x1:160, y1:240, cp1x:130, cp1y:270, cp2x:110, cp2y:300, x2:105, y2:300, color:'#54a0ff', w:5},
+    ]
+  },
+
+  // === 20 NEW DRAWINGS ===
+
+  // --- EASY ---
+  cloud: {
+    hint: "White and fluffy, floating in the sky!",
+    paths: [
+      {t:'circle', cx:250, cy:200, r:50, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:200, cy:220, r:40, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:300, cy:220, r:40, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:175, cy:240, r:35, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:325, cy:240, r:35, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+      {t:'circle', cx:250, cy:245, r:45, color:'#dfe6e9', fill:'#dfe6e9', w:3},
+    ]
+  },
+  balloon: {
+    hint: "Hold the string tight or it will fly away!",
+    paths: [
+      {t:'ellipse', cx:250, cy:160, rx:60, ry:75, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'line', x1:250, y1:235, x2:245, y2:250, color:'#ff6b6b', w:4},
+      {t:'line', x1:245, y1:250, x2:255, y2:265, color:'#ff6b6b', w:4},
+      {t:'line', x1:250, y1:265, x2:250, y2:340, color:'#a5b1c2', w:2},
+      {t:'arc', cx:230, cy:130, r:20, sa:Math.PI, ea:0, color:'#fff', w:3},
+    ]
+  },
+  egg: {
+    hint: "Chickens lay these! You can eat them for breakfast!",
+    paths: [
+      {t:'ellipse', cx:250, cy:200, rx:55, ry:75, color:'#ffeaa7', fill:'#ffeaa7', w:3},
+      {t:'arc', cx:250, cy:160, r:35, sa:Math.PI+0.3, ea:-0.3, color:'#fff', w:4},
+    ]
+  },
+  lollipop: {
+    hint: "A sweet candy on a stick!",
+    paths: [
+      {t:'circle', cx:250, cy:150, r:60, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'arc', cx:250, cy:150, r:45, sa:0, ea:Math.PI, color:'#fff', w:8},
+      {t:'arc', cx:250, cy:150, r:30, sa:Math.PI, ea:0, color:'#ff9ff3', w:8},
+      {t:'arc', cx:250, cy:150, r:15, sa:0, ea:Math.PI, color:'#fff', w:6},
+      {t:'line', x1:250, y1:210, x2:250, y2:340, color:'#dfe6e9', w:8},
+    ]
+  },
+  mushroom: {
+    hint: "It grows in the forest and has a big cap!",
+    paths: [
+      {t:'arc', cx:250, cy:180, r:70, sa:Math.PI, ea:0, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'rect', x:215, y:180, rw:70, rh:100, color:'#ffeaa7', fill:'#ffeaa7', w:3},
+      {t:'circle', cx:220, cy:150, r:12, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:270, cy:140, r:15, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:250, cy:170, r:10, color:'#fff', fill:'#fff', w:2},
+    ]
+  },
+  cherry: {
+    hint: "A small red fruit that grows in pairs!",
+    paths: [
+      {t:'circle', cx:210, cy:230, r:40, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'circle', cx:290, cy:250, r:40, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'bezier', x1:210, y1:190, cp1x:210, cp1y:130, cp2x:250, cp2y:100, x2:250, y2:100, color:'#00b894', w:5},
+      {t:'bezier', x1:290, y1:210, cp1x:290, cp1y:150, cp2x:250, cp2y:100, x2:250, y2:100, color:'#00b894', w:5},
+      {t:'ellipse', cx:260, cy:95, rx:20, ry:10, color:'#00b894', fill:'#00b894', w:2},
+    ]
+  },
+  kite: {
+    hint: "Fly this on a windy day with a long string!",
+    paths: [
+      {t:'line', x1:250, y1:80, x2:330, y2:180, color:'#ff6b6b', w:4},
+      {t:'line', x1:330, y1:180, x2:250, y2:280, color:'#feca57', w:4},
+      {t:'line', x1:250, y1:280, x2:170, y2:180, color:'#54a0ff', w:4},
+      {t:'line', x1:170, y1:180, x2:250, y2:80, color:'#00b894', w:4},
+      {t:'line', x1:170, y1:180, x2:330, y2:180, color:'#a29bfe', w:3},
+      {t:'line', x1:250, y1:80, x2:250, y2:280, color:'#a29bfe', w:3},
+      {t:'line', x1:250, y1:280, x2:260, y2:320, color:'#a5b1c2', w:2},
+      {t:'line', x1:260, y1:320, x2:240, y2:350, color:'#a5b1c2', w:2},
+      {t:'circle', cx:255, cy:305, r:6, color:'#ff9ff3', fill:'#ff9ff3', w:2},
+      {t:'circle', cx:245, cy:335, r:6, color:'#54a0ff', fill:'#54a0ff', w:2},
+    ]
+  },
+
+  // --- MEDIUM ---
+  frog: {
+    hint: "A green animal that says ribbit and hops!",
+    paths: [
+      {t:'ellipse', cx:250, cy:230, rx:80, ry:50, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:200, cy:170, r:30, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:300, cy:170, r:30, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:200, cy:165, r:12, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:300, cy:165, r:12, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:203, cy:165, r:6, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:303, cy:165, r:6, color:'#333', fill:'#333', w:2},
+      {t:'arc', cx:250, cy:240, r:25, sa:0.2, ea:Math.PI-0.2, color:'#ff6b6b', w:4},
+      {t:'ellipse', cx:170, cy:290, rx:30, ry:15, color:'#00b894', fill:'#00b894', w:3},
+      {t:'ellipse', cx:330, cy:290, rx:30, ry:15, color:'#00b894', fill:'#00b894', w:3},
+    ]
+  },
+  bee: {
+    hint: "A buzzing insect that makes honey!",
+    paths: [
+      {t:'ellipse', cx:250, cy:200, rx:60, ry:45, color:'#feca57', fill:'#feca57', w:3},
+      {t:'rect', x:200, y:185, rw:100, rh:12, color:'#333', fill:'#333', w:2},
+      {t:'rect', x:200, y:210, rw:100, rh:12, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:320, cy:200, r:25, color:'#feca57', fill:'#feca57', w:3},
+      {t:'circle', cx:330, cy:195, r:6, color:'#333', fill:'#333', w:2},
+      {t:'ellipse', cx:220, cy:145, rx:35, ry:25, color:'#dfe6e9', fill:'rgba(255,255,255,0.7)', w:2},
+      {t:'ellipse', cx:280, cy:145, rx:35, ry:25, color:'#dfe6e9', fill:'rgba(255,255,255,0.7)', w:2},
+      {t:'line', x1:190, y1:200, x2:160, y2:185, color:'#333', w:3},
+      {t:'line', x1:190, y1:200, x2:160, y2:215, color:'#333', w:3},
+    ]
+  },
+  turtle: {
+    hint: "A slow animal that carries its house on its back!",
+    paths: [
+      {t:'arc', cx:250, cy:220, r:80, sa:Math.PI, ea:0, color:'#00b894', fill:'#00b894', w:3},
+      {t:'ellipse', cx:250, cy:225, rx:80, ry:30, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:350, cy:230, r:25, color:'#00b894', fill:'#00b894', w:3},
+      {t:'circle', cx:360, cy:225, r:5, color:'#333', fill:'#333', w:2},
+      {t:'arc', cx:250, cy:200, r:50, sa:Math.PI+0.5, ea:-0.5, color:'#b5651d', w:4},
+      {t:'line', x1:220, y1:175, x2:250, y2:145, color:'#b5651d', w:3},
+      {t:'line', x1:250, y1:145, x2:280, y2:175, color:'#b5651d', w:3},
+      {t:'ellipse', cx:180, cy:260, rx:25, ry:15, color:'#00b894', fill:'#00b894', w:3},
+      {t:'ellipse', cx:320, cy:260, rx:25, ry:15, color:'#00b894', fill:'#00b894', w:3},
+      {t:'line', x1:155, y1:230, x2:130, y2:220, color:'#00b894', w:8},
+    ]
+  },
+  cupcake: {
+    hint: "A tiny cake with frosting on top!",
+    paths: [
+      {t:'line', x1:180, y1:220, x2:195, y2:300, color:'#e17055', w:4},
+      {t:'line', x1:195, y1:300, x2:305, y2:300, color:'#e17055', w:4},
+      {t:'line', x1:305, y1:300, x2:320, y2:220, color:'#e17055', w:4},
+      {t:'line', x1:180, y1:220, x2:320, y2:220, color:'#e17055', w:4},
+      {t:'line', x1:200, y1:240, x2:210, y2:295, color:'#b5651d', w:2},
+      {t:'line', x1:240, y1:220, x2:245, y2:295, color:'#b5651d', w:2},
+      {t:'line', x1:280, y1:220, x2:275, y2:295, color:'#b5651d', w:2},
+      {t:'circle', cx:250, cy:175, r:55, color:'#ff9ff3', fill:'#ff9ff3', w:3},
+      {t:'circle', cx:200, cy:190, r:35, color:'#ff9ff3', fill:'#ff9ff3', w:3},
+      {t:'circle', cx:300, cy:190, r:35, color:'#ff9ff3', fill:'#ff9ff3', w:3},
+      {t:'circle', cx:250, cy:140, r:8, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+    ]
+  },
+  pumpkin: {
+    hint: "An orange vegetable you carve for Halloween!",
+    paths: [
+      {t:'ellipse', cx:250, cy:220, rx:90, ry:70, color:'#ff9f43', fill:'#ff9f43', w:3},
+      {t:'ellipse', cx:200, cy:220, rx:50, ry:65, color:'#e17055', fill:'#e17055', w:3},
+      {t:'ellipse', cx:300, cy:220, rx:50, ry:65, color:'#e17055', fill:'#e17055', w:3},
+      {t:'ellipse', cx:250, cy:220, rx:40, ry:70, color:'#ff9f43', fill:'#ff9f43', w:3},
+      {t:'rect', x:235, y:130, rw:30, rh:30, color:'#00b894', fill:'#00b894', w:3},
+      {t:'bezier', x1:265, y1:140, cp1x:290, cp1y:120, cp2x:310, cp2y:140, x2:300, y2:160, color:'#00b894', w:4},
+    ]
+  },
+  ladybug: {
+    hint: "A red bug with black spots!",
+    paths: [
+      {t:'circle', cx:250, cy:210, r:70, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'circle', cx:250, cy:130, r:30, color:'#333', fill:'#333', w:3},
+      {t:'line', x1:250, y1:140, x2:250, y2:280, color:'#333', w:4},
+      {t:'circle', cx:215, cy:185, r:12, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:285, cy:185, r:12, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:230, cy:235, r:14, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:270, cy:235, r:14, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:210, cy:255, r:10, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:290, cy:255, r:10, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:230, y1:115, x2:215, y2:90, color:'#333', w:3},
+      {t:'line', x1:270, y1:115, x2:285, y2:90, color:'#333', w:3},
+    ]
+  },
+  crab: {
+    hint: "A sea creature with big claws that walks sideways!",
+    paths: [
+      {t:'ellipse', cx:250, cy:220, rx:80, ry:50, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'circle', cx:200, cy:180, r:15, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'circle', cx:300, cy:180, r:15, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'circle', cx:200, cy:175, r:6, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:300, cy:175, r:6, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:170, y1:200, x2:120, y2:170, color:'#ff6b6b', w:8},
+      {t:'line', x1:120, y1:170, x2:100, y2:150, color:'#ff6b6b', w:6},
+      {t:'line', x1:120, y1:170, x2:100, y2:190, color:'#ff6b6b', w:6},
+      {t:'line', x1:330, y1:200, x2:380, y2:170, color:'#ff6b6b', w:8},
+      {t:'line', x1:380, y1:170, x2:400, y2:150, color:'#ff6b6b', w:6},
+      {t:'line', x1:380, y1:170, x2:400, y2:190, color:'#ff6b6b', w:6},
+      {t:'line', x1:200, y1:265, x2:180, y2:300, color:'#ff6b6b', w:5},
+      {t:'line', x1:230, y1:268, x2:220, y2:305, color:'#ff6b6b', w:5},
+      {t:'line', x1:270, y1:268, x2:280, y2:305, color:'#ff6b6b', w:5},
+      {t:'line', x1:300, y1:265, x2:320, y2:300, color:'#ff6b6b', w:5},
+    ]
+  },
+
+  // --- HARD ---
+  train: {
+    hint: "Choo choo! It rides on tracks and has a smokestack!",
+    paths: [
+      {t:'rect', x:150, y:180, rw:180, rh:80, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'rect', x:330, y:150, rw:70, rh:110, color:'#ff6b6b', fill:'#ff6b6b', w:3},
+      {t:'rect', x:345, y:170, rw:40, rh:40, color:'#74b9ff', fill:'#74b9ff', w:2},
+      {t:'rect', x:270, y:130, rw:30, rh:50, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:285, cy:115, r:20, color:'#a5b1c2', fill:'#a5b1c2', w:2},
+      {t:'circle', cx:180, cy:270, r:25, color:'#333', fill:'#555', w:4},
+      {t:'circle', cx:250, cy:270, r:25, color:'#333', fill:'#555', w:4},
+      {t:'circle', cx:320, cy:270, r:25, color:'#333', fill:'#555', w:4},
+      {t:'circle', cx:380, cy:270, r:25, color:'#333', fill:'#555', w:4},
+      {t:'line', x1:130, y1:295, x2:420, y2:295, color:'#333', w:5},
+      {t:'rect', x:160, y:200, rw:35, rh:25, color:'#feca57', fill:'#feca57', w:2},
+      {t:'rect', x:210, y:200, rw:35, rh:25, color:'#feca57', fill:'#feca57', w:2},
+    ]
+  },
+  helicopter: {
+    hint: "It flies with spinning blades on top!",
+    paths: [
+      {t:'ellipse', cx:250, cy:220, rx:90, ry:45, color:'#54a0ff', fill:'#54a0ff', w:3},
+      {t:'ellipse', cx:160, cy:220, rx:30, ry:25, color:'#74b9ff', fill:'#74b9ff', w:3},
+      {t:'line', x1:340, y1:210, x2:400, y2:180, color:'#54a0ff', w:8},
+      {t:'line', x1:400, y1:175, x2:400, y2:200, color:'#54a0ff', w:4},
+      {t:'ellipse', cx:410, cy:187, rx:15, ry:10, color:'#54a0ff', fill:'#54a0ff', w:2},
+      {t:'line', x1:250, y1:175, x2:250, y2:130, color:'#333', w:4},
+      {t:'line', x1:150, y1:130, x2:350, y2:130, color:'#333', w:6},
+      {t:'ellipse', cx:150, cy:130, rx:10, ry:5, color:'#333', fill:'#333', w:2},
+      {t:'ellipse', cx:350, cy:130, rx:10, ry:5, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:200, y1:265, x2:180, y2:290, color:'#333', w:5},
+      {t:'line', x1:300, y1:265, x2:320, y2:290, color:'#333', w:5},
+      {t:'line', x1:160, y1:290, x2:340, y2:290, color:'#333', w:4},
+    ]
+  },
+  penguin: {
+    hint: "A black and white bird that waddles and loves cold weather!",
+    paths: [
+      {t:'ellipse', cx:250, cy:220, rx:60, ry:80, color:'#333', fill:'#333', w:3},
+      {t:'ellipse', cx:250, cy:230, rx:40, ry:60, color:'#fff', fill:'#fff', w:3},
+      {t:'circle', cx:250, cy:140, r:40, color:'#333', fill:'#333', w:3},
+      {t:'circle', cx:235, cy:135, r:8, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:265, cy:135, r:8, color:'#fff', fill:'#fff', w:2},
+      {t:'circle', cx:237, cy:135, r:4, color:'#333', fill:'#333', w:2},
+      {t:'circle', cx:267, cy:135, r:4, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:250, y1:150, x2:250, y2:165, color:'#ff9f43', w:6},
+      {t:'line', x1:250, y1:165, x2:240, y2:160, color:'#ff9f43', w:5},
+      {t:'line', x1:190, y1:200, x2:150, y2:250, color:'#333', w:10},
+      {t:'line', x1:310, y1:200, x2:350, y2:250, color:'#333', w:10},
+      {t:'ellipse', cx:225, cy:310, rx:20, ry:10, color:'#ff9f43', fill:'#ff9f43', w:2},
+      {t:'ellipse', cx:275, cy:310, rx:20, ry:10, color:'#ff9f43', fill:'#ff9f43', w:2},
+    ]
+  },
+  giraffe: {
+    hint: "The tallest animal with a very long neck and spots!",
+    paths: [
+      {t:'ellipse', cx:280, cy:280, rx:70, ry:45, color:'#feca57', fill:'#feca57', w:3},
+      {t:'line', x1:230, y1:250, x2:200, y2:100, color:'#feca57', w:25},
+      {t:'ellipse', cx:185, cy:90, rx:35, ry:25, color:'#feca57', fill:'#feca57', w:3},
+      {t:'circle', cx:170, cy:85, r:5, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:180, cy:70, x2:175, y2:50, color:'#feca57', w:4},
+      {t:'line', x1:200, cy:70, x2:205, y2:50, color:'#feca57', w:4},
+      {t:'circle', cx:175, cy:47, r:5, color:'#b5651d', fill:'#b5651d', w:2},
+      {t:'circle', cx:205, cy:47, r:5, color:'#b5651d', fill:'#b5651d', w:2},
+      {t:'circle', cx:215, cy:150, r:12, color:'#b5651d', fill:'#b5651d', w:2},
+      {t:'circle', cx:230, cy:200, r:10, color:'#b5651d', fill:'#b5651d', w:2},
+      {t:'circle', cx:205, cy:230, r:8, color:'#b5651d', fill:'#b5651d', w:2},
+      {t:'circle', cx:290, cy:260, r:10, color:'#b5651d', fill:'#b5651d', w:2},
+      {t:'circle', cx:320, cy:280, r:8, color:'#b5651d', fill:'#b5651d', w:2},
+      {t:'line', x1:250, y1:320, x2:250, y2:360, color:'#feca57', w:8},
+      {t:'line', x1:290, y1:320, x2:290, y2:360, color:'#feca57', w:8},
+      {t:'line', x1:320, y1:315, x2:320, y2:360, color:'#feca57', w:8},
+    ]
+  },
+  crown: {
+    hint: "Kings and queens wear this on their head!",
+    paths: [
+      {t:'line', x1:140, y1:280, x2:140, y2:180, color:'#feca57', w:5},
+      {t:'line', x1:140, y1:180, x2:180, y2:220, color:'#feca57', w:5},
+      {t:'line', x1:180, y1:220, x2:220, y2:140, color:'#feca57', w:5},
+      {t:'line', x1:220, y1:140, x2:250, y2:200, color:'#feca57', w:5},
+      {t:'line', x1:250, y1:200, x2:280, y2:140, color:'#feca57', w:5},
+      {t:'line', x1:280, y1:140, x2:320, y2:220, color:'#feca57', w:5},
+      {t:'line', x1:320, y1:220, x2:360, y2:180, color:'#feca57', w:5},
+      {t:'line', x1:360, y1:180, x2:360, y2:280, color:'#feca57', w:5},
+      {t:'line', x1:140, y1:280, x2:360, y2:280, color:'#feca57', w:5},
+      {t:'circle', cx:140, cy:175, r:8, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'circle', cx:220, cy:135, r:10, color:'#54a0ff', fill:'#54a0ff', w:2},
+      {t:'circle', cx:280, cy:135, r:10, color:'#00b894', fill:'#00b894', w:2},
+      {t:'circle', cx:360, cy:175, r:8, color:'#ff6b6b', fill:'#ff6b6b', w:2},
+      {t:'circle', cx:250, cy:195, r:12, color:'#a29bfe', fill:'#a29bfe', w:2},
+    ]
+  },
+  shark: {
+    hint: "A big fish with sharp teeth that swims in the ocean!",
+    paths: [
+      {t:'ellipse', cx:250, cy:200, rx:120, ry:50, color:'#a5b1c2', fill:'#a5b1c2', w:3},
+      {t:'line', x1:250, y1:150, x2:250, y2:100, color:'#a5b1c2', w:6},
+      {t:'line', x1:250, y1:100, x2:220, y2:150, color:'#a5b1c2', w:4},
+      {t:'line', x1:250, y1:100, x2:280, y2:150, color:'#a5b1c2', w:4},
+      {t:'line', x1:370, y1:200, x2:420, y2:160, color:'#a5b1c2', w:5},
+      {t:'line', x1:420, y1:160, x2:420, y2:240, color:'#a5b1c2', w:5},
+      {t:'line', x1:420, y1:240, x2:370, y2:200, color:'#a5b1c2', w:5},
+      {t:'ellipse', cx:170, cy:200, rx:40, ry:25, color:'#d1d8e0', fill:'#d1d8e0', w:3},
+      {t:'circle', cx:155, cy:190, r:8, color:'#333', fill:'#333', w:2},
+      {t:'line', x1:130, y1:210, x2:170, y2:210, color:'#333', w:3},
+      {t:'line', x1:135, y1:210, x2:140, y2:218, color:'#fff', w:2},
+      {t:'line', x1:145, y1:210, x2:150, y2:220, color:'#fff', w:2},
+      {t:'line', x1:155, y1:210, x2:160, y2:218, color:'#fff', w:2},
+      {t:'line', x1:165, y1:210, x2:168, y2:216, color:'#fff', w:2},
+    ]
+  },
+};
+
+// Word pools per difficulty tier
+const EASY_WORDS = ['sun','heart','star','house','tree','flower','fish','moon','apple','ball','rainbow','cat','cloud','balloon','egg','lollipop','mushroom','cherry','kite'];
+const MEDIUM_WORDS = ['dog','bird','car','boat','butterfly','icecream','pizza','umbrella','rocket','snowman','frog','bee','turtle','cupcake','pumpkin','ladybug','crab'];
+const HARD_WORDS = ['dinosaur','elephant','guitar','castle','airplane','octopus','robot','dragon','unicorn','train','helicopter','penguin','giraffe','crown','shark'];
+
+const ALL_WORDS = [...EASY_WORDS, ...MEDIUM_WORDS, ...HARD_WORDS];
+
+// Display names (capitalize first letter)
+function displayName(w) {
+  if (w === 'icecream') return 'Ice Cream';
+  return w.charAt(0).toUpperCase() + w.slice(1);
+}
+
+// ============ GAME STATE ============
+let score = 100;
+let level = 1;
+let maxLevel = 10;
+let currentWord = '';
+let drawStartTime = 0;
+let animFrameId = null;
+let hintUsed = false;
+let hintsRemaining = 3;
+let roundActive = false;
+let usedWords = [];
+let currentPathIndex = 0;
+let currentPaths = [];
+let pendingHighScore = null;
+
+// ============ HIGH SCORES ============
+function loadHighScores() {
+  const stored = localStorage.getItem('drawGuessHighScores');
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveHighScores(scores) {
+  localStorage.setItem('drawGuessHighScores', JSON.stringify(scores));
+}
+
+function isHighScore(score) {
+  const scores = loadHighScores();
+  if (scores.length < 10) return true;
+  return score > scores[scores.length - 1].score;
+}
+
+function addHighScore(name, score, levels) {
+  const scores = loadHighScores();
+  scores.push({ name, score, levels, date: Date.now() });
+  scores.sort((a, b) => b.score - a.score);
+  if (scores.length > 10) scores.length = 10;
+  saveHighScores(scores);
+  return scores;
+}
+
+function displayHighScores(containerId, highlightScore) {
+  const container = document.getElementById(containerId);
+  const scores = loadHighScores();
+
+  if (scores.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  let html = '<h3>High Scores</h3><ol>';
+  scores.forEach(s => {
+    const isHighlight = highlightScore && s.score === highlightScore.score && s.name === highlightScore.name;
+    html += `<li class="${isHighlight ? 'current-score' : ''}">${s.name}: ${s.score} pts (${s.levels} levels)</li>`;
+  });
+  html += '</ol>';
+  container.innerHTML = html;
+}
+
+function selectMaxLevel(num) {
+  maxLevel = num;
+  document.querySelectorAll('.level-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent === String(num));
+  });
+}
+
+const canvas = document.getElementById('draw-canvas');
+const ctx = canvas.getContext('2d');
+
+// ============ SCREENS ============
+function showScreen(id) {
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById(id).style.display = 'block';
+}
+
+// ============ START GAME ============
+function startGame() {
+  score = 100;
+  level = 1;
+  hintsRemaining = 3;
+  usedWords = [];
+  pendingHighScore = null;
+  showScreen('game-screen');
+  updateUI();
+  startRound();
+}
+
+// Show high scores on title screen when page loads
+function initTitleScreen() {
+  displayHighScores('high-scores-display');
+}
+window.addEventListener('load', initTitleScreen);
+
+// ============ UI UPDATES ============
+function updateUI() {
+  document.getElementById('score-display').textContent = 'Score: ' + score;
+  document.getElementById('level-display').textContent = 'Level ' + level + ' / ' + maxLevel;
+  document.getElementById('hints-display').textContent = 'Hints: ' + hintsRemaining;
+}
+
+// ============ PICK WORD ============
+function pickWord() {
+  let pool;
+  if (level <= 3) pool = EASY_WORDS;
+  else if (level <= 6) pool = MEDIUM_WORDS;
+  else pool = HARD_WORDS;
+
+  const available = pool.filter(w => !usedWords.includes(w) && DRAWINGS[w]);
+  if (available.length === 0) {
+    // Reset used words for this tier if exhausted
+    const tierUsed = pool.filter(w => usedWords.includes(w));
+    tierUsed.forEach(w => usedWords.splice(usedWords.indexOf(w), 1));
+    return pickWord();
+  }
+  const word = available[Math.floor(Math.random() * available.length)];
+  usedWords.push(word);
+  return word;
+}
+
+// ============ GENERATE DISTRACTORS ============
+function getDistractors(correct, count) {
+  const others = ALL_WORDS.filter(w => w !== correct);
+  // Shuffle
+  for (let i = others.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [others[i], others[j]] = [others[j], others[i]];
+  }
+  return others.slice(0, count);
+}
+
+// ============ START ROUND ============
+function startRound() {
+  // Check if game is complete
+  if (level > maxLevel) {
+    gameOver(true); // true = completed all levels
+    return;
+  }
+
+  roundActive = true;
+  hintUsed = false;
+  document.getElementById('hint-text').textContent = '';
+  document.getElementById('hint-btn').disabled = hintsRemaining <= 0;
+  document.getElementById('next-btn').disabled = false;
+
+  currentWord = pickWord();
+  currentPaths = DRAWINGS[currentWord].paths;
+  currentPathIndex = 0;
+
+  const distractors = getDistractors(currentWord, 9);
+  const choices = [currentWord, ...distractors];
+  // Shuffle choices
+  for (let i = choices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [choices[i], choices[j]] = [choices[j], choices[i]];
+  }
+
+  // Render buttons
+  const grid = document.getElementById('words-grid');
+  grid.innerHTML = '';
+  choices.forEach((word, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'word-btn btn-c' + (i % 10);
+    btn.textContent = displayName(word);
+    btn.onclick = () => handleGuess(word, btn);
+    grid.appendChild(btn);
+  });
+
+  // Clear canvas and draw first path
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawStartTime = Date.now();
+  animateCurrentPath();
+}
+
+// ============ SHOW NEXT PATH ============
+function showNextPath() {
+  if (!roundActive) return;
+
+  currentPathIndex++;
+
+  if (currentPathIndex >= currentPaths.length) {
+    // All paths shown, disable the next button
+    document.getElementById('next-btn').disabled = true;
+    return;
+  }
+
+  animateCurrentPath();
+}
+
+// ============ ANIMATE CURRENT PATH ============
+function animateCurrentPath() {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+
+  const pathToAnimate = currentPaths[currentPathIndex];
+  const animDuration = 400; // ms to animate one path
+  const startTime = performance.now();
+
+  function draw(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / animDuration, 1);
+
+    // Redraw all completed paths
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < currentPathIndex; i++) {
+      drawPath(currentPaths[i], 1);
+    }
+
+    // Animate the current path
+    drawPath(pathToAnimate, progress);
+
+    if (progress < 1 && roundActive) {
+      animFrameId = requestAnimationFrame(draw);
+    }
+  }
+
+  animFrameId = requestAnimationFrame(draw);
+}
+
+// ============ DRAWING ENGINE ============
+// Drawing is now handled by animateCurrentPath() above
+
+function drawPath(p, progress) {
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (p.t === 'line') {
+    ctx.beginPath();
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.w;
+    ctx.moveTo(p.x1, p.y1);
+    const tx = p.x1 + (p.x2 - p.x1) * progress;
+    const ty = p.y1 + (p.y2 - p.y1) * progress;
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+  }
+  else if (p.t === 'circle') {
+    ctx.beginPath();
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.w;
+    const endAngle = Math.PI * 2 * progress;
+    ctx.arc(p.cx, p.cy, p.r, 0, endAngle);
+    if (p.fill && progress >= 1) {
+      ctx.fillStyle = p.fill;
+      ctx.fill();
+    }
+    ctx.stroke();
+  }
+  else if (p.t === 'ellipse') {
+    ctx.beginPath();
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.w;
+    const endAngle = Math.PI * 2 * progress;
+    ctx.ellipse(p.cx, p.cy, p.rx, p.ry, 0, 0, endAngle);
+    if (p.fill && progress >= 1) {
+      ctx.fillStyle = p.fill;
+      ctx.fill();
+    }
+    ctx.stroke();
+  }
+  else if (p.t === 'arc') {
+    ctx.beginPath();
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.w;
+    const range = p.ea - p.sa;
+    const endAngle = p.sa + range * progress;
+    ctx.arc(p.cx, p.cy, p.r, p.sa, endAngle);
+    if (p.fill && progress >= 1) {
+      ctx.fillStyle = p.fill;
+      ctx.fill();
+    }
+    ctx.stroke();
+  }
+  else if (p.t === 'rect') {
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.w;
+    const rw = p.rw * progress;
+    const rh = p.rh * progress;
+    if (p.fill && progress >= 1) {
+      ctx.fillStyle = p.fill;
+      ctx.fillRect(p.x, p.y, p.rw, p.rh);
+    }
+    ctx.strokeRect(p.x, p.y, rw, rh);
+  }
+  else if (p.t === 'bezier') {
+    ctx.beginPath();
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.w;
+    ctx.moveTo(p.x1, p.y1);
+    // Approximate progress along bezier
+    const steps = 30;
+    const maxStep = Math.floor(steps * progress);
+    for (let s = 1; s <= maxStep; s++) {
+      const t = s / steps;
+      const mt = 1 - t;
+      const x = mt*mt*mt*p.x1 + 3*mt*mt*t*p.cp1x + 3*mt*t*t*p.cp2x + t*t*t*p.x2;
+      const y = mt*mt*mt*p.y1 + 3*mt*mt*t*p.cp1y + 3*mt*t*t*p.cp2y + t*t*t*p.y2;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+}
+
+// ============ GUESS HANDLING ============
+function handleGuess(word, btn) {
+  if (!roundActive) return;
+
+  if (word === currentWord) {
+    // Correct!
+    roundActive = false;
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    document.getElementById('next-btn').disabled = true;
+    // Draw the full picture
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    currentPaths.forEach(p => drawPath(p, 1));
+
+    btn.classList.add('correct-pick');
+
+    // Calculate bonus: more points for guessing with fewer paths shown
+    const pathsRemaining = currentPaths.length - currentPathIndex - 1;
+    const earlyBonus = pathsRemaining * 5; // 5 points per path not yet shown
+    const baseBonus = 10;
+    const bonus = baseBonus + earlyBonus;
+    score += bonus;
+    updateUI();
+
+    // Show score popup
+    showScorePopup('+' + bonus);
+
+    // Celebration
+    launchConfetti();
+
+    // Next level after delay
+    setTimeout(() => {
+      level++;
+      updateUI();
+      if (level <= maxLevel) {
+        showLevelBanner();
+        setTimeout(() => startRound(), 1200);
+      } else {
+        // Completed all levels!
+        setTimeout(() => gameOver(true), 500);
+      }
+    }, 1500);
+  } else {
+    // Wrong - subtract 10 points
+    btn.classList.add('wrong-pick');
+    btn.disabled = true;
+    score = Math.max(0, score - 10);
+    updateUI();
+
+    setTimeout(() => btn.classList.remove('wrong-pick'), 500);
+  }
+}
+
+// ============ HINT ============
+function showHint() {
+  if (!currentWord || hintUsed || hintsRemaining <= 0) return;
+  hintUsed = true;
+  hintsRemaining--;
+  document.getElementById('hint-text').textContent = DRAWINGS[currentWord].hint;
+  document.getElementById('hint-btn').disabled = true;
+  updateUI();
+}
+
+// ============ GAME OVER ============
+function gameOver(completed) {
+  const title = document.getElementById('gameover-title');
+  title.textContent = completed ? 'You Win!' : 'Game Over!';
+
+  document.getElementById('final-score-text').textContent = 'You scored ' + score + ' points!';
+  document.getElementById('final-level-text').textContent = completed
+    ? 'You completed all ' + maxLevel + ' levels!'
+    : 'You reached Level ' + level + '!';
+
+  // Check for high score
+  const highScoreEntry = document.getElementById('high-score-entry');
+  const finalScores = document.getElementById('final-high-scores');
+
+  if (isHighScore(score)) {
+    pendingHighScore = { score, levels: completed ? maxLevel : level - 1 };
+    highScoreEntry.style.display = 'block';
+    document.getElementById('player-name').value = '';
+    document.getElementById('player-name').focus();
+    finalScores.style.display = 'none';
+  } else {
+    highScoreEntry.style.display = 'none';
+    displayHighScores('final-high-scores');
+  }
+
+  showScreen('gameover-screen');
+}
+
+function saveHighScore() {
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim() || 'Player';
+
+  if (pendingHighScore) {
+    const savedScore = addHighScore(name, pendingHighScore.score, pendingHighScore.levels);
+    document.getElementById('high-score-entry').style.display = 'none';
+    displayHighScores('final-high-scores', { name, score: pendingHighScore.score });
+    pendingHighScore = null;
+  }
+}
+
+// ============ CONFETTI ============
+function launchConfetti() {
+  const container = document.getElementById('celebration');
+  container.style.display = 'block';
+  container.innerHTML = '';
+  const colors = ['#ff6b6b','#feca57','#54a0ff','#00b894','#ff9ff3','#a29bfe','#ff9f43','#10ac84'];
+
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.top = '-10px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
+    piece.style.width = (8 + Math.random() * 10) + 'px';
+    piece.style.height = (8 + Math.random() * 10) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+    container.appendChild(piece);
+  }
+  setTimeout(() => { container.style.display = 'none'; container.innerHTML = ''; }, 2000);
+}
+
+// ============ LEVEL BANNER ============
+function showLevelBanner() {
+  const banner = document.getElementById('level-banner');
+  banner.textContent = 'Level ' + level + '!';
+  banner.style.display = 'block';
+  setTimeout(() => { banner.style.display = 'none'; }, 1200);
+}
+
+// ============ SCORE POPUP ============
+function showScorePopup(text) {
+  const popup = document.createElement('div');
+  popup.className = 'score-popup';
+  popup.textContent = text;
+  popup.style.left = '50%';
+  popup.style.top = '40%';
+  document.getElementById('game-screen').style.position = 'relative';
+  document.getElementById('game-screen').appendChild(popup);
+  setTimeout(() => popup.remove(), 1000);
+}
+</script>
+</body>
+</html>
